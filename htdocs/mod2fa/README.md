@@ -4,7 +4,7 @@ Ce module ajoute l'authentification à deux facteurs (2FA) à Dolibarr via Googl
 
 ## Installation
 
-1. Copiez le dossier `mod2fa` dans le répertoire `htdocs/custom/` de votre installation Dolibarr
+1. Copiez le dossier `mod2fa` dans le répertoire `htdocs/` de votre installation Dolibarr
 2. Dans Dolibarr, allez dans Configuration > Modules/Applications
 3. Recherchez "2FA" dans la liste des modules et activez-le
 4. Configurez le module dans Configuration > 2FA

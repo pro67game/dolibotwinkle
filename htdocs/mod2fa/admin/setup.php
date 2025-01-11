@@ -1,7 +1,7 @@
 <?php
 require '../main.inc.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
-require_once DOL_DOCUMENT_ROOT.'/custom/mod2fa/class/mod2fa.class.php';
+require_once DOL_DOCUMENT_ROOT.'/mod2fa/class/mod2fa.class.php';
 
 $langs->load("admin");
 $langs->load("mod2fa@mod2fa");
