@@ -1,10 +1,12 @@
 import { authenticator } from 'otplib';
 
-// Function to generate random bytes in browser
-const generateRandomBytes = (length: number) => {
+// Function to generate random bytes in browser and convert to hex string
+const generateRandomBytes = (length: number): string => {
   const array = new Uint8Array(length);
   crypto.getRandomValues(array);
-  return array;
+  return Array.from(array)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 };
 
 // Configure authenticator to use browser-compatible random bytes
