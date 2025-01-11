@@ -8,7 +8,7 @@ class modMod2FA extends DolibarrModules
         global $langs, $conf;
 
         $this->db = $db;
-        $this->numero = 500000; // ID unique du module
+        $this->numero = 500000;
         $this->rights_class = 'mod2fa';
         $this->family = "other";
         $this->module_position = '50';
@@ -23,6 +23,9 @@ class modMod2FA extends DolibarrModules
             'hooks' => array('main'),
             'triggers' => 1,
         );
+
+        // Ajout du menu de configuration
+        $this->config_page_url = array("setup.php@mod2fa");
     }
 
     public function init($options = '')
