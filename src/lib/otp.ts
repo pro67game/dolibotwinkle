@@ -15,11 +15,7 @@ authenticator.options = {
   // Set a static window for token validation
   window: 1,
   // Use browser-compatible crypto
-  createRandomBytes: (length: number) => {
-    const array = new Uint8Array(length);
-    crypto.getRandomValues(array);
-    return array;
-  },
+  createRandomBytes: generateRandomBytes,
 };
 
 // Generate a new secret key for the user
