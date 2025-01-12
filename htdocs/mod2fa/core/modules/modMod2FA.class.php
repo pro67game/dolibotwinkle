@@ -20,18 +20,19 @@ class modMod2FA extends DolibarrModules
         $this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
         $this->picto = 'lock';
         $this->module_parts = array(
-            'hooks' => array('main'),
+            'hooks' => array(
+                'usercard',  // Hook pour la fiche utilisateur
+                'main'
+            ),
             'triggers' => 1,
         );
 
-        // Ajout du menu de configuration
         $this->config_page_url = array("setup.php@mod2fa");
     }
 
     public function init($options = '')
     {
         $sql = array();
-        $result = $this->_load_tables('/mod2fa/sql/');
         
         // Création de la table pour stocker les secrets 2FA
         $sql[] = "CREATE TABLE IF NOT EXISTS ".MAIN_DB_PREFIX."user_2fa (
