@@ -2,28 +2,13 @@
 
 class Mod2FA
 {
-    /**
-     * @var DoliDB Database handler
-     */
     public $db;
 
-    /**
-     * Constructor
-     *
-     * @param DoliDB $db Database handler
-     */
     public function __construct($db)
     {
         $this->db = $db;
     }
 
-    /**
-     * Enable 2FA for a user
-     *
-     * @param int $user_id User ID
-     * @param string $secret Secret key
-     * @return int <0 if KO, >0 if OK
-     */
     public function enable($user_id, $secret)
     {
         $sql = "INSERT INTO ".MAIN_DB_PREFIX."user_2fa";
@@ -41,16 +26,10 @@ class Mod2FA
         return -1;
     }
 
-    /**
-     * Disable 2FA for a user
-     *
-     * @param int $user_id User ID
-     * @return int <0 if KO, >0 if OK
-     */
     public function disable($user_id)
     {
         $sql = "UPDATE ".MAIN_DB_PREFIX."user_2fa";
-        $sql.= " SET enabled = 0";
+        $sql.= " SET enabled = 0, secret = NULL";
         $sql.= " WHERE fk_user = ".$user_id;
 
         $resql = $this->db->query($sql);
@@ -60,12 +39,6 @@ class Mod2FA
         return -1;
     }
 
-    /**
-     * Get 2FA status and secret for a user
-     *
-     * @param int $user_id User ID
-     * @return array|bool Array with status and secret if found, false if not found
-     */
     public function getStatus($user_id)
     {
         $sql = "SELECT enabled, secret";
@@ -81,6 +54,21 @@ class Mod2FA
                     'secret' => $obj->secret
                 );
             }
+        }
+        return false;
+    }
+
+    public function isUserInGroup2FA($user_id)
+    {
+        $sql = "SELECT COUNT(*) as nb FROM ".MAIN_DB_PREFIX."usergroup_user as ugu";
+        $sql.= " INNER JOIN ".MAIN_DB_PREFIX."usergroup as ug ON ugu.fk_usergroup = ug.rowid";
+        $sql.= " WHERE ugu.fk_user = ".$user_id;
+        $sql.= " AND ug.nom = '2FA_enabled'";
+
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            $obj = $this->db->fetch_object($resql);
+            return ($obj->nb > 0);
         }
         return false;
     }
