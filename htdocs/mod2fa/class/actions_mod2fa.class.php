@@ -19,25 +19,17 @@ class Actionsmod2fa
         $context = explode(':', $parameters['context']);
 
         if (in_array('usercard', $context)) {
-            // Ne pas afficher les boutons si on est déjà dans l'action view2fa
             if ($action != 'view2fa') {
                 require_once DOL_DOCUMENT_ROOT.'/mod2fa/class/mod2fa.class.php';
                 $mod2fa = new Mod2FA($this->db);
                 $status = $mod2fa->getStatus($object->id);
 
-                // S'assurer que nous sommes sur la fiche de l'utilisateur connecté ou que nous sommes admin
                 if ($object->id == $user->id || $user->admin) {
-                    print '<div class="tabsAction">';
                     if (!$status || !$status['enabled']) {
-                        print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=view2fa">';
-                        print $langs->trans("Activer le 2FA");
-                        print '</a>';
+                        print '<div class="inline-block divButAction"><a class="butAction" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=view2fa">'.$langs->trans("Activer le 2FA").'</a></div>';
                     } else {
-                        print '<a class="butActionDelete" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=disable2fa">';
-                        print $langs->trans("Désactiver le 2FA");
-                        print '</a>';
+                        print '<div class="inline-block divButAction"><a class="butActionDelete" href="'.$_SERVER["PHP_SELF"].'?id='.$object->id.'&action=disable2fa">'.$langs->trans("Désactiver le 2FA").'</a></div>';
                     }
-                    print '</div>';
                 }
             }
         }
