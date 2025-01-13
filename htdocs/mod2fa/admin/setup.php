@@ -28,6 +28,23 @@ if ($action == 'update') {
     } else {
         setEventMessages($langs->trans("Error"), null, 'errors');
     }
+} elseif ($action == 'toggle2fa') {
+    $userId = GETPOST('user_id', 'int');
+    $mod2fa = new Mod2FA($db);
+    $status = $mod2fa->getStatus($userId);
+    
+    if ($status && $status['enabled']) {
+        if ($mod2fa->disable($userId) > 0) {
+            setEventMessages($langs->trans("2FADisabled"), null, 'mesgs');
+        }
+    } else {
+        $secret = generate2FASecret();
+        if ($mod2fa->enable($userId, $secret) > 0) {
+            setEventMessages($langs->trans("2FAEnabled"), null, 'mesgs');
+        }
+    }
+    header('Location: '.$_SERVER["PHP_SELF"]);
+    exit;
 }
 
 // View
@@ -68,7 +85,7 @@ print '<td>'.$langs->trans("2FAStatus").'</td>';
 print '<td>'.$langs->trans("Actions").'</td>';
 print "</tr>\n";
 
-$sql = "SELECT u.rowid, u.login, u.firstname, u.lastname, t.enabled as tfa_enabled";
+$sql = "SELECT u.rowid, u.login, u.firstname, u.lastname, t.enabled as tfa_enabled, t.secret";
 $sql.= " FROM ".MAIN_DB_PREFIX."user as u";
 $sql.= " LEFT JOIN ".MAIN_DB_PREFIX."user_2fa as t ON t.fk_user = u.rowid";
 $sql.= " WHERE u.statut = 1";
@@ -83,11 +100,20 @@ if ($resql) {
         print '<td>'.$obj->firstname.' '.$obj->lastname.' ('.$obj->login.')</td>';
         print '<td>'.($obj->tfa_enabled ? $langs->trans("Enabled") : $langs->trans("Disabled")).'</td>';
         print '<td class="center">';
-        if (!$obj->tfa_enabled) {
-            print '<a class="butAction" href="'.DOL_URL_ROOT.'/user/card.php?id='.$obj->rowid.'&action=view2fa">'.$langs->trans("Enable2FA").'</a>';
-        } else {
-            print '<a class="butActionDelete" href="'.DOL_URL_ROOT.'/user/card.php?id='.$obj->rowid.'&action=disable2fa">'.$langs->trans("Disable2FA").'</a>';
+        
+        // Bouton Activer/Désactiver
+        print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=toggle2fa&user_id='.$obj->rowid.'&token='.newToken().'">';
+        print ($obj->tfa_enabled ? $langs->trans("Disable2FA") : $langs->trans("Enable2FA"));
+        print '</a>';
+        
+        // Bouton QR Code (visible uniquement si 2FA est activé)
+        if ($obj->tfa_enabled && $obj->secret) {
+            $qrCodeUrl = getQRCodeUrl($obj->login, $obj->secret, $conf->global->MAIN_INFO_SOCIETE_NOM);
+            print ' <a class="butAction" href="#" onclick="showQRCode(\''.$qrCodeUrl.'\'); return false;">';
+            print $langs->trans("ShowQRCode");
+            print '</a>';
         }
+        
         print '</td>';
         print '</tr>';
         $i++;
@@ -95,6 +121,25 @@ if ($resql) {
 }
 
 print '</table>';
+
+// Modal pour afficher le QR Code
+print '<div id="qrCodeModal" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.4);">';
+print '<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:300px; text-align:center;">';
+print '<img id="qrCodeImage" src="" style="max-width:200px; margin:10px;"/>';
+print '<br><button onclick="hideQRCode()" class="button">'.$langs->trans("Close").'</button>';
+print '</div>';
+print '</div>';
+
+// JavaScript pour gérer l'affichage du QR Code
+print '<script type="text/javascript">
+function showQRCode(url) {
+    document.getElementById("qrCodeImage").src = url;
+    document.getElementById("qrCodeModal").style.display = "block";
+}
+function hideQRCode() {
+    document.getElementById("qrCodeModal").style.display = "none";
+}
+</script>';
 
 print '<div class="center"><input type="submit" class="button" value="'.$langs->trans("Save").'"></div>';
 print '</form>';
