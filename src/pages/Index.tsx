@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { generateSecret, generateToken, verifyToken } from "@/lib/otp";
+import { generateSecret, generateToken, verifyToken, generateQRCodeUrl } from "@/lib/otp";
 import { toast } from "sonner";
 
 const Index = () => {
   const [secret] = useState(() => generateSecret());
   const [token, setToken] = useState("");
+  const [showQR, setShowQR] = useState(false);
 
   const handleVerify = () => {
     const isValid = verifyToken(token, secret);
@@ -29,6 +30,25 @@ const Index = () => {
               {secret}
             </code>
           </div>
+
+          <div className="flex justify-center">
+            <Button 
+              variant="outline"
+              onClick={() => setShowQR(!showQR)}
+            >
+              {showQR ? "Masquer QR" : "Afficher QR"}
+            </Button>
+          </div>
+
+          {showQR && (
+            <div className="flex justify-center my-4">
+              <img 
+                src={generateQRCodeUrl("test@example.com", secret)} 
+                alt="QR Code"
+                className="border rounded-lg"
+              />
+            </div>
+          )}
 
           <div>
             <p className="text-sm text-gray-600 mb-2">Token actuel :</p>
