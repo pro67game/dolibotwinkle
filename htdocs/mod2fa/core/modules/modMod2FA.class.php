@@ -46,6 +46,39 @@ class modMod2FA extends DolibarrModules
             UNIQUE KEY uk_user_2fa_fk_user (fk_user)
         ) ENGINE=InnoDB;";
 
+        // Installation de phpqrcode
+        $phpqrcodePath = DOL_DOCUMENT_ROOT.'/includes/phpqrcode';
+        if (!is_dir($phpqrcodePath)) {
+            // Créer le dossier includes s'il n'existe pas
+            if (!is_dir(DOL_DOCUMENT_ROOT.'/includes')) {
+                mkdir(DOL_DOCUMENT_ROOT.'/includes');
+            }
+            
+            // Télécharger et extraire phpqrcode
+            $phpqrcodeUrl = 'https://sourceforge.net/projects/phpqrcode/files/latest/download';
+            $tempFile = tempnam(sys_get_temp_dir(), 'phpqrcode');
+            file_put_contents($tempFile, file_get_contents($phpqrcodeUrl));
+            
+            // Extraire l'archive
+            $zip = new ZipArchive;
+            if ($zip->open($tempFile) === TRUE) {
+                $zip->extractTo($phpqrcodePath);
+                $zip->close();
+                
+                // Déplacer les fichiers du sous-dossier vers le dossier principal
+                $subDir = glob($phpqrcodePath.'/phpqrcode-*', GLOB_ONLYDIR);
+                if (!empty($subDir)) {
+                    $subDir = $subDir[0];
+                    $files = glob($subDir.'/*');
+                    foreach($files as $file) {
+                        rename($file, $phpqrcodePath.'/'.basename($file));
+                    }
+                    rmdir($subDir);
+                }
+            }
+            unlink($tempFile);
+        }
+
         return $this->_init($sql, $options);
     }
 }
