@@ -106,10 +106,13 @@ if ($resql) {
         print ($obj->tfa_enabled ? $langs->trans("Disable2FA") : $langs->trans("Enable2FA"));
         print '</a>';
         
-        // Bouton QR Code (visible uniquement si 2FA est activé)
+        // Bouton QR Code et Secret (visible uniquement si 2FA est activé)
         if ($obj->tfa_enabled && $obj->secret) {
+            // Utilisation de la bibliothèque phpqrcode pour générer le QR code en base64
             $qrCodeUrl = getQRCodeUrl($obj->login, $obj->secret, $conf->global->MAIN_INFO_SOCIETE_NOM);
-            print ' <a class="butAction" href="#" onclick="showQRCode(\''.$qrCodeUrl.'\'); return false;">';
+            $qrCodeImage = generateQRCodeImage($qrCodeUrl);
+            
+            print ' <a class="butAction" href="#" onclick="showQRCode(\''.$qrCodeImage.'\', \''.$obj->secret.'\'); return false;">';
             print $langs->trans("ShowQRCode");
             print '</a>';
         }
@@ -122,18 +125,25 @@ if ($resql) {
 
 print '</table>';
 
-// Modal pour afficher le QR Code
+// Modal pour afficher le QR Code et la clé secrète
 print '<div id="qrCodeModal" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.4);">';
-print '<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:300px; text-align:center;">';
+print '<div style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:400px; text-align:center;">';
+print '<h3>'.$langs->trans("2FASetup").'</h3>';
+print '<p>'.$langs->trans("ScanQRCode").'</p>';
 print '<img id="qrCodeImage" src="" style="max-width:200px; margin:10px;"/>';
-print '<br><button onclick="hideQRCode()" class="button">'.$langs->trans("Close").'</button>';
+print '<div style="margin:20px 0;">';
+print '<p>'.$langs->trans("OrEnterSecretKey").':</p>';
+print '<code id="secretKey" style="background:#f5f5f5; padding:10px; display:block; margin:10px 0; word-break:break-all;"></code>';
+print '</div>';
+print '<button onclick="hideQRCode()" class="button">'.$langs->trans("Close").'</button>';
 print '</div>';
 print '</div>';
 
-// JavaScript pour gérer l'affichage du QR Code
+// JavaScript pour gérer l'affichage du QR Code et de la clé secrète
 print '<script type="text/javascript">
-function showQRCode(url) {
-    document.getElementById("qrCodeImage").src = url;
+function showQRCode(imageData, secret) {
+    document.getElementById("qrCodeImage").src = "data:image/png;base64," + imageData;
+    document.getElementById("secretKey").textContent = secret;
     document.getElementById("qrCodeModal").style.display = "block";
 }
 function hideQRCode() {
