@@ -58,6 +58,19 @@ class Mod2FA
         return false;
     }
 
+    public function updateSecret($user_id, $secret)
+    {
+        $sql = "UPDATE ".MAIN_DB_PREFIX."user_2fa";
+        $sql.= " SET secret = '".$this->db->escape($secret)."'";
+        $sql.= " WHERE fk_user = ".$user_id;
+
+        $resql = $this->db->query($sql);
+        if ($resql) {
+            return 1;
+        }
+        return -1;
+    }
+
     public function isUserInGroup2FA($user_id)
     {
         $sql = "SELECT COUNT(*) as nb FROM ".MAIN_DB_PREFIX."usergroup_user as ugu";
