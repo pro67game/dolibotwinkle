@@ -105,7 +105,7 @@ if ($resql) {
         print '</a>';
         
         // Bouton QR Code et Secret (visible uniquement si 2FA est activé)
-        if ($obj->tfa_enabled && $obj->secret) {
+        if ($obj->tfa_enabled) {
             require_once DOL_DOCUMENT_ROOT.'/includes/phpqrcode/qrlib.php';
             
             // Génération du QR code en base64
