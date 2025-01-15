@@ -6,6 +6,7 @@ if (false === (@include '../../main.inc.php')) {
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once '../lib/mod2fa.lib.php';
 require_once '../class/mod2fa.class.php';
+require_once DOL_DOCUMENT_ROOT.'/includes/phpqrcode/qrlib.php';
 
 global $langs, $user, $db;
 $langs->loadLangs(array("admin", "mod2fa@mod2fa"));
@@ -99,28 +100,19 @@ if ($resql) {
         print '<td>'.($obj->tfa_enabled ? $langs->trans("Enabled") : $langs->trans("Disabled")).'</td>';
         print '<td class="center">';
         
-        // Bouton Activer/Désactiver
         print '<a class="butAction" href="'.$_SERVER["PHP_SELF"].'?action=toggle2fa&user_id='.$obj->rowid.'&token='.newToken().'">';
         print ($obj->tfa_enabled ? $langs->trans("Disable2FA") : $langs->trans("Enable2FA"));
         print '</a>';
         
-        // Bouton QR Code (visible si 2FA est activé)
         if ($obj->tfa_enabled) {
-            require_once DOL_DOCUMENT_ROOT.'/includes/phpqrcode/qrlib.php';
-            
-            // Générer ou récupérer le secret
+            $secret = empty($obj->secret) ? generate2FASecret() : $obj->secret;
             if (empty($obj->secret)) {
-                $secret = generate2FASecret();
                 $mod2fa = new Mod2FA($db);
                 $mod2fa->updateSecret($obj->rowid, $secret);
-            } else {
-                $secret = $obj->secret;
             }
             
-            // Générer l'URL pour le QR code
             $qrCodeUrl = getQRCodeUrl($obj->login, $secret, $conf->global->MAIN_INFO_SOCIETE_NOM);
             
-            // Générer le QR code en base64
             ob_start();
             QRcode::png($qrCodeUrl, null, QR_ECLEVEL_L, 4);
             $qrCodeImage = base64_encode(ob_get_clean());
@@ -152,7 +144,6 @@ print '<button onclick="hideQRCode()" class="button">'.$langs->trans("Close").'<
 print '</div>';
 print '</div>';
 
-// JavaScript pour la modal
 print '<script type="text/javascript">
 function showQRCode(imageData, secret) {
     document.getElementById("qrCodeImage").src = "data:image/png;base64," + imageData;
