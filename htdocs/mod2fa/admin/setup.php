@@ -104,9 +104,16 @@ if ($resql) {
         print ($obj->tfa_enabled ? $langs->trans("Disable2FA") : $langs->trans("Enable2FA"));
         print '</a>';
         
-        // Bouton QR Code et Secret (visible uniquement si 2FA est activé)
+        // Bouton QR Code (toujours visible si 2FA est activé)
         if ($obj->tfa_enabled) {
             require_once DOL_DOCUMENT_ROOT.'/includes/phpqrcode/qrlib.php';
+            
+            // Si le secret n'existe pas, on en génère un nouveau
+            if (empty($obj->secret)) {
+                $obj->secret = generate2FASecret();
+                $mod2fa = new Mod2FA($db);
+                $mod2fa->updateSecret($obj->rowid, $obj->secret);
+            }
             
             // Génération du QR code en base64
             ob_start();
