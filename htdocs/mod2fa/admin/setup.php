@@ -6,6 +6,22 @@ if (false === (@include '../../main.inc.php')) {
 require_once DOL_DOCUMENT_ROOT.'/core/lib/admin.lib.php';
 require_once '../lib/mod2fa.lib.php';
 require_once '../class/mod2fa.class.php';
+
+// Vérification de l'existence du dossier phpqrcode
+$phpqrcodePath = DOL_DOCUMENT_ROOT.'/includes/phpqrcode';
+if (!is_dir($phpqrcodePath)) {
+    dol_mkdir($phpqrcodePath);
+    // Télécharger et installer phpqrcode si nécessaire
+    $zipFile = $phpqrcodePath.'/phpqrcode.zip';
+    file_put_contents($zipFile, file_get_contents('https://sourceforge.net/projects/phpqrcode/files/latest/download'));
+    $zip = new ZipArchive;
+    if ($zip->open($zipFile) === TRUE) {
+        $zip->extractTo($phpqrcodePath);
+        $zip->close();
+        unlink($zipFile);
+    }
+}
+
 require_once DOL_DOCUMENT_ROOT.'/includes/phpqrcode/qrlib.php';
 
 global $langs, $user, $db;
@@ -111,15 +127,18 @@ if ($resql) {
                 $mod2fa->updateSecret($obj->rowid, $secret);
             }
             
-            $qrCodeUrl = getQRCodeUrl($obj->login, $secret, $conf->global->MAIN_INFO_SOCIETE_NOM);
-            
-            ob_start();
-            QRcode::png($qrCodeUrl, null, QR_ECLEVEL_L, 4);
-            $qrCodeImage = base64_encode(ob_get_clean());
-            
-            print ' <a class="butAction" href="#" onclick="showQRCode(\''.$qrCodeImage.'\', \''.$secret.'\'); return false;">';
-            print $langs->trans("ShowQRCode");
-            print '</a>';
+            try {
+                $qrCodeUrl = getQRCodeUrl($obj->login, $secret, $conf->global->MAIN_INFO_SOCIETE_NOM);
+                ob_start();
+                QRcode::png($qrCodeUrl, null, QR_ECLEVEL_L, 4);
+                $qrCodeImage = base64_encode(ob_get_clean());
+                
+                print ' <a class="butAction" href="#" onclick="showQRCode(\''.$qrCodeImage.'\', \''.$secret.'\'); return false;">';
+                print $langs->trans("ShowQRCode");
+                print '</a>';
+            } catch (Exception $e) {
+                dol_syslog("Error generating QR code: " . $e->getMessage(), LOG_ERR);
+            }
         }
         
         print '</td>';
